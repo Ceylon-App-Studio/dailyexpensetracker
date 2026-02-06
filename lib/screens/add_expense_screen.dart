@@ -178,11 +178,16 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         decoration: const InputDecoration(
           labelText: 'Category',
           border: OutlineInputBorder(),
+          suffixIcon: Icon(Icons.keyboard_arrow_down),
         ),
         child: Text(
           _selectedCategory ?? 'Select category',
           style: TextStyle(
-            color: _selectedCategory == null ? Colors.grey : null,
+            fontSize: 16,
+            fontWeight:
+            _selectedCategory == null ? FontWeight.w400 : FontWeight.w600,
+            color:
+            _selectedCategory == null ? Colors.grey : Colors.black87,
           ),
         ),
       ),
@@ -256,39 +261,76 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                   const SizedBox(height: 12),
                   SizedBox(
                     height: 300,
-                    child: ListView.builder(
-                      itemCount: filtered.length + 1,
+                    child: filtered.isEmpty
+                        ? const Padding(
+                      padding: EdgeInsets.only(top: 40),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Icon(Icons.folder_open, color: Colors.grey),
+                          SizedBox(height: 8),
+                          Text(
+                            'No categories found',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    )
+                        : ListView.builder(
+                      itemCount: filtered.length + 2,
                       itemBuilder: (context, index) {
+                        // ===== Add category (centered) =====
                         if (index == 0) {
-                          return ListTile(
-                            leading: const Icon(Icons.add),
-                            title: const Text('Add new category'),
-                            onTap: () async {
-                              Navigator.pop(sheetContext);
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: () async {
+                                Navigator.pop(sheetContext);
 
-                              final newCategory =
-                              await Navigator.pushNamed(
-                                context,
-                                '/categories',
-                                arguments: {
-                                  'autoOpenAdd': true,
-                                  'lockedType':
-                                  _entryType == EntryType.expense
-                                      ? CategoryType.expense
-                                      : CategoryType.income,
-                                },
-                              );
+                                final newCategory = await Navigator.pushNamed(
+                                  context,
+                                  '/categories',
+                                  arguments: {
+                                    'autoOpenAdd': true,
+                                    'lockedType':
+                                    _entryType == EntryType.expense
+                                        ? CategoryType.expense
+                                        : CategoryType.income,
+                                  },
+                                );
 
-                              if (newCategory is String) {
-                                setState(() {
-                                  _selectedCategory = newCategory;
-                                });
-                              }
-                            },
+                                if (newCategory is String) {
+                                  setState(() {
+                                    _selectedCategory = newCategory;
+                                  });
+                                }
+                              },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(Icons.add, color: Colors.blue),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Add new category',
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           );
                         }
 
-                        final category = filtered[index - 1];
+                        // ===== Divider =====
+                        if (index == 1) {
+                          return const Divider(height: 1);
+                        }
+
+                        // ===== Category list =====
+                        final category = filtered[index - 2];
                         return ListTile(
                           title: Text(category),
                           onTap: () {
@@ -299,6 +341,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       },
                     ),
                   ),
+
                 ],
               ),
             );

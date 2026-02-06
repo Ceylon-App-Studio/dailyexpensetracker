@@ -314,8 +314,18 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
                         children: [
                           Expanded(
                             child: ChoiceChip(
+                              avatar: const Icon(Icons.receipt_long, size: 18),
                               label: const Text('Expense'),
                               selected: selectedType == CategoryType.expense,
+                              selectedColor: Colors.red.shade100,
+                              backgroundColor: Colors.grey.shade100,
+                              disabledColor: Colors.grey.shade200,
+                              labelStyle: TextStyle(
+                                color: selectedType == CategoryType.expense
+                                    ? Colors.red.shade800
+                                    : Colors.grey.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
                               onSelected: (_lockedType == null ||
                                   _lockedType == CategoryType.expense)
                                   ? (_) {
@@ -324,14 +334,23 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
                                 });
                               }
                                   : null,
-                              disabledColor: Colors.grey.shade200,
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: ChoiceChip(
+                              avatar: const Icon(Icons.attach_money, size: 18),
                               label: const Text('Income'),
                               selected: selectedType == CategoryType.income,
+                              selectedColor: Colors.green.shade100,
+                              backgroundColor: Colors.grey.shade100,
+                              disabledColor: Colors.grey.shade200,
+                              labelStyle: TextStyle(
+                                color: selectedType == CategoryType.income
+                                    ? Colors.green.shade800
+                                    : Colors.grey.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
                               onSelected: (_lockedType == null ||
                                   _lockedType == CategoryType.income)
                                   ? (_) {
@@ -340,13 +359,24 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
                                 });
                               }
                                   : null,
-                              disabledColor: Colors.grey.shade200,
                             ),
                           ),
                         ],
                       ),
+
+                      if (_lockedType != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'Category type is locked for this flow',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
+
 
                   const SizedBox(height: 24),
                   Row(
