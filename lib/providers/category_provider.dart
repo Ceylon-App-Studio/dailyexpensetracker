@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 
@@ -29,94 +28,94 @@ class CategoryNotifier extends StateNotifier<List<Category>> {
     // -------- EXPENSE --------
     Category(
       name: 'Food',
-      iconCode: Icons.restaurant.codePoint,
+      iconCode: 'food',
       type: CategoryType.expense,
     ),
     Category(
       name: 'Transport',
-      iconCode: Icons.directions_bus.codePoint,
+      iconCode: 'transport',
       type: CategoryType.expense,
     ),
     Category(
       name: 'Rent',
-      iconCode: Icons.home.codePoint,
+      iconCode: 'rent',
       type: CategoryType.expense,
     ),
     Category(
       name: 'Utilities',
-      iconCode: Icons.lightbulb.codePoint,
+      iconCode: 'utilities',
       type: CategoryType.expense,
     ),
     Category(
       name: 'Health',
-      iconCode: Icons.favorite.codePoint,
+      iconCode: 'health',
       type: CategoryType.expense,
     ),
     Category(
       name: 'Clothing',
-      iconCode: Icons.checkroom.codePoint,
+      iconCode: 'clothing',
       type: CategoryType.expense,
     ),
     Category(
       name: 'Skin care',
-      iconCode: Icons.spa.codePoint,
+      iconCode: 'skinCare',
       type: CategoryType.expense,
     ),
     Category(
       name: 'Hygiene',
-      iconCode: Icons.soap.codePoint,
+      iconCode: 'hygiene',
       type: CategoryType.expense,
     ),
     Category(
       name: 'Groceries',
-      iconCode: Icons.shopping_cart.codePoint,
+      iconCode: 'groceries',
       type: CategoryType.expense,
     ),
     Category(
       name: 'Telecom',
-      iconCode: Icons.phone_android.codePoint,
+      iconCode: 'telecom',
       type: CategoryType.expense,
     ),
     Category(
       name: 'Credit cards',
-      iconCode: Icons.credit_card.codePoint,
+      iconCode: 'creditCard',
       type: CategoryType.expense,
     ),
     Category(
       name: 'Loan',
-      iconCode: Icons.account_balance.codePoint,
+      iconCode: 'loan',
       type: CategoryType.expense,
     ),
     Category(
       name: 'Miscellaneous',
-      iconCode: Icons.more_horiz.codePoint,
+      iconCode: 'miscellaneous',
       type: CategoryType.expense,
     ),
 
     // -------- INCOME --------
     Category(
       name: 'Salary',
-      iconCode: Icons.payments.codePoint,
+      iconCode: 'salary',
       type: CategoryType.income,
     ),
     Category(
       name: 'Bonus',
-      iconCode: Icons.card_giftcard.codePoint,
+      iconCode: 'bonus',
       type: CategoryType.income,
     ),
     Category(
       name: 'Freelance',
-      iconCode: Icons.work.codePoint,
+      iconCode: 'freelance',
       type: CategoryType.income,
     ),
     Category(
       name: 'Gift',
-      iconCode: Icons.redeem.codePoint,
+      iconCode: 'gift',
       type: CategoryType.income,
     ),
     Category(
       name: 'Social media',
-      iconCode: Icons.camera_alt.codePoint,
+      iconCode: 'socialMedia',
       type: CategoryType.income,
     ),
   ];
@@ -129,7 +128,7 @@ class CategoryNotifier extends StateNotifier<List<Category>> {
 
     await CategoryHiveService.addCategory(
       name: name.trim(),
-      iconCode: Icons.category.codePoint,
+      iconCode: 'miscellaneous',
       type: type,
     );
 

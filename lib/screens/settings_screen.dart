@@ -1,3 +1,4 @@
+import 'package:dailyexpensetracker/screens/subscription_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_review/in_app_review.dart';
@@ -39,6 +40,25 @@ class SettingsScreen extends ConsumerWidget {
             value: ref.watch(themeProvider).isDarkMode,
             onChanged: (value) =>
                 ref.read(themeProvider).toggle(value),
+          ),
+
+          const Divider(),
+
+          const _SectionHeader('Premium'),
+
+          ListTile(
+            leading: const Icon(Icons.block),
+            title: const Text('Remove Ads'),
+            subtitle: const Text('Go premium for an ad-free experience'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const SubscriptionScreen(),
+                ),
+              );
+            },
           ),
 
           const Divider(),

@@ -21,6 +21,29 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
   bool _incomeExpanded = true;
   bool _expenseExpanded = true;
 
+  bool _autoOpenAdd = false;
+  CategoryType? _lockedType;
+  bool _dialogOpened = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final args = ModalRoute.of(context)?.settings.arguments;
+
+    if (args is Map) {
+      _autoOpenAdd = args['autoOpenAdd'] == true;
+      _lockedType = args['lockedType'];
+    }
+
+    if (_autoOpenAdd && !_dialogOpened) {
+      _dialogOpened = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showAddDialog(context);
+      });
+    }
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -33,13 +56,11 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
     final expenses = ref.watch(expenseProvider);
     final incomes = ref.watch(incomeProvider);
 
-    final incomeCategories = categories
-        .where((c) => c.type == CategoryType.income)
-        .toList();
+    final incomeCategories =
+    categories.where((c) => c.type == CategoryType.income).toList();
 
-    final expenseCategories = categories
-        .where((c) => c.type == CategoryType.expense)
-        .toList();
+    final expenseCategories =
+    categories.where((c) => c.type == CategoryType.expense).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -52,7 +73,10 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
         actions: [
           IconButton(
             icon: const Icon(Icons.add, color: Colors.white),
-            onPressed: () => _showAddDialog(context),
+            onPressed: () {
+              _lockedType = null;
+              _showAddDialog(context);
+            },
           ),
         ],
       ),
@@ -76,61 +100,59 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
               curve: Curves.easeInOut,
               child: _incomeExpanded
                   ? Column(
-                      children: incomeCategories.map((category) {
-                        final index = categories.indexOf(category);
-                        final usageCount = incomes
-                            .where((e) => e.source == category.name)
-                            .length;
-                        return ListTile(
-                          leading: Icon(
-                            category.icon,
-                            color: Theme.of(context).colorScheme.primary,
+                children: incomeCategories.map((category) {
+                  final usageCount = incomes
+                      .where((e) => e.source == category.name)
+                      .length;
+
+                  return ListTile(
+                    leading: Icon(
+                      category.icon,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    title: Text(category.name),
+                    subtitle: Text('$usageCount transactions'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit,
+                              color: Colors.blueGrey),
+                          onPressed: () => _showEditDialog(
+                            context,
+                            category,
+                            category.name,
                           ),
-                          title: Text(category.name),
-                          subtitle: Text('$usageCount transactions'),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.edit,
-                                  color: Colors.blueGrey,
-                                ),
-                                onPressed: () => _showEditDialog(
-                                  context,
-                                  category,
-                                  category.name,
-                                ),
-                              ),
-                              Tooltip(
-                                message: usageCount > 0
-                                    ? 'Category is used in $usageCount transactions'
-                                    : 'Delete category',
-                                child: IconButton(
-                                  icon: const Icon(Icons.delete),
-                                  color: usageCount > 0
-                                      ? Colors.grey
-                                      : Colors.red,
-                                  onPressed: () {
-                                    if (usageCount > 0) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Category is used in $usageCount transactions',
-                                          ),
-                                        ),
-                                      );
-                                      return;
-                                    }
-                                    _showDeleteDialog(context, category);
-                                  },
-                                ),
-                              ),
-                            ],
+                        ),
+                        Tooltip(
+                          message: usageCount > 0
+                              ? 'Category is used in $usageCount transactions'
+                              : 'Delete category',
+                          child: IconButton(
+                            icon: const Icon(Icons.delete),
+                            color: usageCount > 0
+                                ? Colors.grey
+                                : Colors.red,
+                            onPressed: () {
+                              if (usageCount > 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Category is used in $usageCount transactions',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              _showDeleteDialog(context, category);
+                            },
                           ),
-                        );
-                      }).toList(),
-                    )
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              )
                   : const SizedBox.shrink(),
             ),
           ],
@@ -151,66 +173,65 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
               curve: Curves.easeInOut,
               child: _expenseExpanded
                   ? Column(
-                      children: expenseCategories.map((category) {
-                        final isMisc =
-                            category.name.toLowerCase() == 'miscellaneous';
+                children: expenseCategories.map((category) {
+                  final isMisc =
+                      category.name.toLowerCase() == 'miscellaneous';
 
-                        final expenseCount = expenses
-                            .where((e) => e.category == category.name)
-                            .length;
+                  final expenseCount = expenses
+                      .where((e) => e.category == category.name)
+                      .length;
 
-                        return ListTile(
-                          leading: Icon(
-                            category.icon,
-                            color: Theme.of(context).colorScheme.primary,
+                  return ListTile(
+                    leading: Icon(
+                      category.icon,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    title: Text(category.name),
+                    subtitle: Text('$expenseCount transactions'),
+                    trailing: isMisc
+                        ? null
+                        : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit,
+                              color: Colors.blueGrey),
+                          onPressed: () => _showEditDialog(
+                            context,
+                            category,
+                            category.name,
                           ),
-                          title: Text(category.name),
-                          subtitle: Text('$expenseCount transactions'),
-                          trailing: isMisc
-                              ? null
-                              : Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.edit,
-                                        color: Colors.blueGrey,
-                                      ),
-                                      onPressed: () => _showEditDialog(
-                                        context,
-                                        category,
-                                        category.name,
-                                      ),
+                        ),
+                        Tooltip(
+                          message: expenseCount > 0
+                              ? 'Category is used in $expenseCount transactions'
+                              : 'Delete category',
+                          child: IconButton(
+                            icon: const Icon(Icons.delete),
+                            color: expenseCount > 0
+                                ? Colors.grey
+                                : Colors.red,
+                            onPressed: () {
+                              if (expenseCount > 0) {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Category is used in $expenseCount transactions',
                                     ),
-                                    Tooltip(
-                                      message: expenseCount > 0
-                                          ? 'Category is used in $expenseCount transactions'
-                                          : 'Delete category',
-                                      child: IconButton(
-                                        icon: const Icon(Icons.delete),
-                                        color: expenseCount > 0
-                                            ? Colors.grey
-                                            : Colors.red,
-                                        onPressed: () {
-                                          if (expenseCount > 0) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'Category is used in $expenseCount transactions',
-                                                ),
-                                              ),
-                                            );
-                                            return;
-                                          }
-                                          _showDeleteDialog(context, category);
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                        );
-                      }).toList(),
-                    )
+                                  ),
+                                );
+                                return;
+                              }
+                              _showDeleteDialog(context, category);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              )
                   : const SizedBox.shrink(),
             ),
           ],
@@ -224,11 +245,11 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
   // =======================
   void _showAddDialog(BuildContext context) {
     final controller = TextEditingController();
-    CategoryType selectedType = CategoryType.expense;
+    CategoryType selectedType = _lockedType ?? CategoryType.expense;
 
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // 🔑 keyboard-safe
+      isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
@@ -248,7 +269,6 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ===== Drag handle =====
                   Center(
                     child: Container(
                       width: 40,
@@ -260,55 +280,75 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
                       ),
                     ),
                   ),
-
-                  // ===== Title =====
                   const Text(
                     'Add Category',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style:
+                    TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
-
                   const SizedBox(height: 16),
-
-                  // ===== Category name =====
                   TextField(
                     controller: controller,
                     autofocus: true,
-                    textInputAction: TextInputAction.done,
                     decoration: const InputDecoration(
                       labelText: 'Category name',
                       border: OutlineInputBorder(),
                     ),
                   ),
-
                   const SizedBox(height: 16),
 
-                  // ===== Type selector =====
-                  SegmentedButton<CategoryType>(
-                    showSelectedIcon: false,
-                    segments: const [
-                      ButtonSegment(
-                        value: CategoryType.expense,
-                        label: Text('Expense'),
+                  // ===== TYPE (LOCKED IF PROVIDED) =====
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Category type',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey,
+                        ),
                       ),
-                      ButtonSegment(
-                        value: CategoryType.income,
-                        label: Text('Income'),
+                      const SizedBox(height: 8),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ChoiceChip(
+                              label: const Text('Expense'),
+                              selected: selectedType == CategoryType.expense,
+                              onSelected: (_lockedType == null ||
+                                  _lockedType == CategoryType.expense)
+                                  ? (_) {
+                                setSheetState(() {
+                                  selectedType = CategoryType.expense;
+                                });
+                              }
+                                  : null,
+                              disabledColor: Colors.grey.shade200,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ChoiceChip(
+                              label: const Text('Income'),
+                              selected: selectedType == CategoryType.income,
+                              onSelected: (_lockedType == null ||
+                                  _lockedType == CategoryType.income)
+                                  ? (_) {
+                                setSheetState(() {
+                                  selectedType = CategoryType.income;
+                                });
+                              }
+                                  : null,
+                              disabledColor: Colors.grey.shade200,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                    selected: {selectedType},
-                    onSelectionChanged: (value) {
-                      setSheetState(() {
-                        selectedType = value.first;
-                      });
-                    },
                   ),
 
                   const SizedBox(height: 24),
-
-                  // ===== Actions =====
                   Row(
                     children: [
                       Expanded(
@@ -336,15 +376,17 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
                                   content: Text('Category already exists'),
                                 ),
                               );
+                              return;
                             }
+
+                            // ✅ RETURN NEW CATEGORY
+                            Navigator.pop(context, name);
                           },
                           child: const Text('Save'),
                         ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 8),
                 ],
               ),
             );
@@ -357,21 +399,19 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
   // =======================
   // EDIT CATEGORY
   // =======================
-  void _showEditDialog(BuildContext context, Category category, String currentName) {
+  void _showEditDialog(
+      BuildContext context, Category category, String currentName) {
     final controller = TextEditingController(text: currentName);
 
     showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           title: const Text('Edit Category'),
-          content: SingleChildScrollView(
-            child: TextField(
-              controller: controller,
-              autofocus: true,
-              decoration: const InputDecoration(hintText: 'Category name'),
-            ),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(hintText: 'Category name'),
           ),
           actions: [
             TextButton(
@@ -387,17 +427,15 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
                     .read(categoryProvider.notifier)
                     .editCategory(category, newName);
 
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
+
                 if (!success) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Category name already exists'),
                     ),
                   );
-                  return;
                 }
-
-                Navigator.pop(dialogContext);
               },
               child: const Text('Save'),
             ),
@@ -428,14 +466,13 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen>
                   .read(categoryProvider.notifier)
                   .deleteCategory(category);
 
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
 
               if (!success) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text(
-                      'Category cannot be deleted (in use or protected)',
-                    ),
+                    content:
+                    Text('Category cannot be deleted (in use or protected)'),
                   ),
                 );
               }

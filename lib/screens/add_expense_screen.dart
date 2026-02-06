@@ -16,8 +16,7 @@ class AddExpenseScreen extends ConsumerStatefulWidget {
   const AddExpenseScreen({super.key});
 
   @override
-  ConsumerState<AddExpenseScreen> createState() =>
-      _AddExpenseScreenState();
+  ConsumerState<AddExpenseScreen> createState() => _AddExpenseScreenState();
 }
 
 class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
@@ -141,10 +140,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           style: const TextStyle(color: Colors.white),
         ),
       ),
-
-      // ✅ Sticky Save button
       bottomNavigationBar: _saveBar(context),
-
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -156,17 +152,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               const SizedBox(height: 16),
               _amountField(currency),
               const SizedBox(height: 12),
-
-              // ✅ Category picker (custom bottom sheet)
               _categoryPicker(context, filteredCategories),
-
-              TextButton.icon(
-                onPressed: () =>
-                    Navigator.pushNamed(context, '/categories'),
-                icon: const Icon(Icons.add),
-                label: const Text('Add new category'),
-              ),
-
               const SizedBox(height: 12),
               _inputField('Note', _noteController),
               const SizedBox(height: 12),
@@ -196,9 +182,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         child: Text(
           _selectedCategory ?? 'Select category',
           style: TextStyle(
-            color: _selectedCategory == null
-                ? Colors.grey
-                : null,
+            color: _selectedCategory == null ? Colors.grey : null,
           ),
         ),
       ),
@@ -272,24 +256,43 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                   const SizedBox(height: 12),
                   SizedBox(
                     height: 300,
-                    child: filtered.isEmpty
-                        ? const Center(
-                      child: Text(
-                        'No categories found',
-                        style:
-                        TextStyle(color: Colors.grey),
-                      ),
-                    )
-                        : ListView.builder(
-                      itemCount: filtered.length,
+                    child: ListView.builder(
+                      itemCount: filtered.length + 1,
                       itemBuilder: (context, index) {
-                        final category = filtered[index];
+                        if (index == 0) {
+                          return ListTile(
+                            leading: const Icon(Icons.add),
+                            title: const Text('Add new category'),
+                            onTap: () async {
+                              Navigator.pop(sheetContext);
+
+                              final newCategory =
+                              await Navigator.pushNamed(
+                                context,
+                                '/categories',
+                                arguments: {
+                                  'autoOpenAdd': true,
+                                  'lockedType':
+                                  _entryType == EntryType.expense
+                                      ? CategoryType.expense
+                                      : CategoryType.income,
+                                },
+                              );
+
+                              if (newCategory is String) {
+                                setState(() {
+                                  _selectedCategory = newCategory;
+                                });
+                              }
+                            },
+                          );
+                        }
+
+                        final category = filtered[index - 1];
                         return ListTile(
                           title: Text(category),
                           onTap: () {
-                            setState(() {
-                              _selectedCategory = category;
-                            });
+                            setState(() => _selectedCategory = category);
                             Navigator.pop(sheetContext);
                           },
                         );
@@ -426,16 +429,14 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   }
 
   // =======================
-  // SAVE LOGIC (UNCHANGED)
+  // SAVE LOGIC
   // =======================
   Future<void> _saveEntry(BuildContext context) async {
     final amount = double.tryParse(_amountController.text);
 
     if (amount == null || _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Amount and Category required'),
-        ),
+        const SnackBar(content: Text('Amount and Category required')),
       );
       return;
     }

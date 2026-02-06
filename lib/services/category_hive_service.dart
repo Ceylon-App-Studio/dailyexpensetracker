@@ -24,7 +24,7 @@ class CategoryHiveService {
   // ✅ CREATE object here — never accept HiveObject from outside
   static Future<void> addCategory({
     required String name,
-    required int iconCode,
+    required String iconCode,
     required CategoryType type,
   }) async {
     await _box.add(
